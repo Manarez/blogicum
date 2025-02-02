@@ -1,6 +1,5 @@
-from datetime import datetime
-
 from django.db import models
+from django.utils.timezone import now
 
 from core.constants import CHAR_LENGTH, USER
 from core.models import BaseModel, FullBaseModel
@@ -9,13 +8,11 @@ from core.models import BaseModel, FullBaseModel
 class PublishedPostManager(models.Manager):
     """Класс для получения опубликованных постов."""
 
-    def published_objects(self, date):
-        return (
-            Post.objects.filter(
-                pub_date__lte=date,
-                is_published=True,
-                category__is_published=True,
-            )
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            pub_date__lte=now(),
+            is_published=True,
+            category__is_published=True,
         )
 
 
@@ -29,7 +26,7 @@ class Post(FullBaseModel):
             'Если установить дату в будущем — '
             'можно делать отложенные публикации.'
         ),
-        default=datetime.today()
+        default=now
     )
     author = models.ForeignKey(
         USER, on_delete=models.CASCADE, verbose_name='Автор публикации'
@@ -48,17 +45,21 @@ class Post(FullBaseModel):
         verbose_name='Категория'
     )
     comment_count = models.IntegerField(default=0)
-    published_objects = PublishedPostManager().published_objects
+
     image = models.ImageField(
         'Изображение',
         upload_to='post_images',
         blank=True
     )
 
+    objects = models.Manager()
+    published_objects = PublishedPostManager()
+
     class Meta:
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
         ordering = ('-pub_date',)
+        default_related_name = 'posts'
 
     def __str__(self):
         return self.title

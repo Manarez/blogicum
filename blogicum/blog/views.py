@@ -9,7 +9,7 @@ from django.views.generic import (
 from blog.models import Category, Comment, Post
 from core.constants import PAGINATE_BY, TODAY, USER
 from core.mixins import (
-    CategoryPublishedMixin, OnlyAuthorMixin, ModelPostMixin,
+    OnlyAuthorMixin, ModelPostMixin,
     ModelAndFormCommentMixin,
     GetSuccessUrlPostMixin, GetSuccessUrlProfileMixin
 )
@@ -23,7 +23,7 @@ class IndexListView(ModelPostMixin, ListView):
     template_name = 'blog/index.html'
 
     def get_queryset(self):
-        return Post.published_objects(TODAY)
+        return Post.published_objects.all()
 
 
 class PostCreateView(
@@ -103,10 +103,11 @@ class EditProfileView(GetSuccessUrlProfileMixin, UpdateView):
         return self.request.user
 
 
-class ProfileDetailListView(ModelPostMixin, ListView):
+class ProfileDetailListView(ListView):
     """View для отображения страницы профиля."""
-
+    model = USER
     template_name = 'blog/profile.html'
+    context_object_name = 'profile'
     paginate_by = PAGINATE_BY
 
     def get_user(self):
@@ -115,11 +116,8 @@ class ProfileDetailListView(ModelPostMixin, ListView):
 
     def get_queryset(self):
         if self.request.user == self.get_user():
-            return Post.objects.filter(author_id__exact=self.get_user().id)
-        else:
-            return Post.published_objects(TODAY).filter(
-                author_id__exact=self.get_user().id
-            )
+            return self.get_user().posts.all()
+        return self.get_user().posts(manager='published_objects').all()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -127,23 +125,26 @@ class ProfileDetailListView(ModelPostMixin, ListView):
         return context
 
 
-class CategoryListView(CategoryPublishedMixin, ModelPostMixin, ListView):
+class CategoryListView(ListView):
     """View для отображения страницы с постами из определенной категории."""
 
+    model = Category
     template_name = 'blog/category.html'
     paginate_by = PAGINATE_BY
 
     def get_category(self):
-        return self.kwargs.get('category_slug')
+        return get_object_or_404(
+            Category, is_published=True, slug=self.kwargs['category_slug']
+        )
 
     def get_queryset(self):
-        return Post.published_objects(TODAY).filter(
-            category__slug=self.get_category()
+        return Post.published_objects.filter(
+            category=self.get_category()
         )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['category'] = Category.objects.get(slug=self.get_category())
+        context['category'] = self.get_category()
         return context
 
 
