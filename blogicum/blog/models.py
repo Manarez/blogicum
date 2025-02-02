@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from django.contrib.auth import get_user_model
 from django.db import models
 
 from core.constants import CHAR_LENGTH, USER
@@ -103,7 +102,7 @@ class Location(BaseModel):
 
 
 class Comment(models.Model):
-    "Класс для описания таблицы Comment в БД."
+    """Класс для описания таблицы Comment в БД."""
 
     text = models.TextField('Текст комментария')
     post = models.ForeignKey(

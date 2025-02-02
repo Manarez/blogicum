@@ -93,6 +93,12 @@ class EditProfileView(GetSuccessUrlProfileMixin, UpdateView):
     form_class = UserForm
     template_name = 'blog/user.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            raise Http404()
+
+        return super().dispatch(request, *args, **kwargs)
+
     def get_object(self, queryset=None):
         return self.request.user
 
@@ -100,8 +106,8 @@ class EditProfileView(GetSuccessUrlProfileMixin, UpdateView):
 class ProfileDetailListView(ModelPostMixin, ListView):
     """View для отображения страницы профиля."""
 
-    paginate_by = PAGINATE_BY
     template_name = 'blog/profile.html'
+    paginate_by = PAGINATE_BY
 
     def get_user(self):
         username = self.kwargs.get('username')
@@ -124,8 +130,8 @@ class ProfileDetailListView(ModelPostMixin, ListView):
 class CategoryListView(CategoryPublishedMixin, ModelPostMixin, ListView):
     """View для отображения страницы с постами из определенной категории."""
 
-    paginate_by = PAGINATE_BY
     template_name = 'blog/category.html'
+    paginate_by = PAGINATE_BY
 
     def get_category(self):
         return self.kwargs.get('category_slug')
@@ -139,6 +145,26 @@ class CategoryListView(CategoryPublishedMixin, ModelPostMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['category'] = Category.objects.get(slug=self.get_category())
         return context
+
+
+# class CategoryListView(CategoryPublishedMixin, ModelPostMixin, ListView):
+#     """View для отображения страницы с постами из определенной категории."""
+
+#     template_name = 'blog/category.html'
+#     paginate_by = PAGINATE_BY
+
+#     def get_category(self):
+#         return self.kwargs.get('category_slug')
+
+#     def get_queryset(self):
+#         return Post.published_objects(TODAY).filter(
+#             category__slug=self.get_category()
+#         )
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['category'] = Category.objects.get(slug=self.get_category())
+#         return context
 
 
 class CommentCreateView(
