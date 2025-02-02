@@ -7,7 +7,7 @@ from django.views.generic import (
 )
 
 from blog.models import Category, Comment, Post
-from core.constants import PAGINATE_BY, TODAY, USER
+from core.constants import PAGINATE_BY, USER
 from core.mixins import (
     OnlyAuthorMixin, ModelPostMixin,
     ModelAndFormCommentMixin,
@@ -105,6 +105,7 @@ class EditProfileView(GetSuccessUrlProfileMixin, UpdateView):
 
 class ProfileDetailListView(ListView):
     """View для отображения страницы профиля."""
+
     model = USER
     template_name = 'blog/profile.html'
     context_object_name = 'profile'
@@ -146,26 +147,6 @@ class CategoryListView(ListView):
         context = super().get_context_data(**kwargs)
         context['category'] = self.get_category()
         return context
-
-
-# class CategoryListView(CategoryPublishedMixin, ModelPostMixin, ListView):
-#     """View для отображения страницы с постами из определенной категории."""
-
-#     template_name = 'blog/category.html'
-#     paginate_by = PAGINATE_BY
-
-#     def get_category(self):
-#         return self.kwargs.get('category_slug')
-
-#     def get_queryset(self):
-#         return Post.published_objects(TODAY).filter(
-#             category__slug=self.get_category()
-#         )
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         context['category'] = Category.objects.get(slug=self.get_category())
-#         return context
 
 
 class CommentCreateView(
