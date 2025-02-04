@@ -1,4 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.db.models import Count
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -23,7 +24,11 @@ class IndexListView(ModelPostMixin, ListView):
     template_name = 'blog/index.html'
 
     def get_queryset(self):
-        return Post.published_objects.all()
+        return Post.published_objects.all().annotate(
+            comment_count=Count('comment')
+        ).order_by(
+            '-pub_date'
+        )
 
 
 class PostCreateView(
@@ -116,9 +121,20 @@ class ProfileDetailListView(ListView):
         return get_object_or_404(USER, username=username)
 
     def get_queryset(self):
+        user_posts = self.get_user().posts
         if self.request.user == self.get_user():
-            return self.get_user().posts.all()
-        return self.get_user().posts(manager='published_objects').all()
+            return user_posts.all().annotate(
+                comment_count=Count('comment')
+            ).order_by(
+                '-pub_date'
+            )
+        return user_posts(
+            manager='published_objects'
+        ).all().annotate(
+            comment_count=Count('comment')
+        ).order_by(
+            '-pub_date'
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -141,6 +157,10 @@ class CategoryListView(ListView):
     def get_queryset(self):
         return Post.published_objects.filter(
             category=self.get_category()
+        ).annotate(
+            comment_count=Count('comment')
+        ).order_by(
+            '-pub_date'
         )
 
     def get_context_data(self, **kwargs):
@@ -163,7 +183,6 @@ class CommentCreateView(
         comment.author = self.request.user
         comment.post = post
         comment.save()
-        post.comment_count = post.comment.count()
         post.save()
         return redirect('blog:post_detail', pk=post.pk)
 
@@ -188,10 +207,3 @@ class CommentDeleteView(OnlyAuthorMixin, DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('blog:post_detail', args=(self.get_post().id,))
-
-    def delete(self, request, *args, **kwargs):
-        post = self.get_post()
-        response = super().delete(request, *args, **kwargs)
-        post.comment_count = post.comment.count()
-        post.save()
-        return response

@@ -44,14 +44,11 @@ class Post(FullBaseModel):
         null=True,
         verbose_name='Категория'
     )
-    comment_count = models.IntegerField(default=0)
-
     image = models.ImageField(
         'Изображение',
         upload_to='post_images',
         blank=True
     )
-
     objects = models.Manager()
     published_objects = PublishedPostManager()
 
