@@ -10,8 +10,7 @@ from django.views.generic import (
 from blog.models import Category, Comment, Post
 from core.constants import PAGINATE_BY, USER
 from core.mixins import (
-    OnlyAuthorMixin, ModelPostMixin,
-    ModelAndFormCommentMixin,
+    OnlyAuthorMixin, ModelPostMixin, ModelAndFormCommentMixin,
     GetSuccessUrlPostMixin, GetSuccessUrlProfileMixin
 )
 from .forms import CommentForm, PostForm, UserForm
@@ -20,15 +19,13 @@ from .forms import CommentForm, PostForm, UserForm
 class IndexListView(ModelPostMixin, ListView):
     """View для отображения главной страницы проекта."""
 
-    paginate_by = PAGINATE_BY
     template_name = 'blog/index.html'
+    paginate_by = PAGINATE_BY
 
     def get_queryset(self):
         return Post.published_objects.all().annotate(
             comment_count=Count('comment')
-        ).order_by(
-            '-pub_date'
-        )
+        ).order_by('-pub_date')
 
 
 class PostCreateView(
@@ -45,9 +42,9 @@ class PostCreateView(
 
 
 class PostEditView(
-    OnlyAuthorMixin, ModelPostMixin, GetSuccessUrlPostMixin, UpdateView
+    ModelPostMixin, GetSuccessUrlPostMixin, UpdateView
 ):
-    """View для отображения страницы регистрации поста."""
+    """View для отображения страницы редактирования поста."""
 
     form_class = PostForm
     template_name = 'blog/create.html'
@@ -111,7 +108,6 @@ class EditProfileView(GetSuccessUrlProfileMixin, UpdateView):
 class ProfileDetailListView(ListView):
     """View для отображения страницы профиля."""
 
-    model = USER
     template_name = 'blog/profile.html'
     context_object_name = 'profile'
     paginate_by = PAGINATE_BY
@@ -121,20 +117,14 @@ class ProfileDetailListView(ListView):
         return get_object_or_404(USER, username=username)
 
     def get_queryset(self):
-        user_posts = self.get_user().posts
+        user_id = self.get_user().id
         if self.request.user == self.get_user():
-            return user_posts.all().annotate(
-                comment_count=Count('comment')
-            ).order_by(
-                '-pub_date'
-            )
-        return user_posts(
-            manager='published_objects'
-        ).all().annotate(
+            posts = Post.objects.all().filter(author_id=user_id)
+        else:
+            posts = Post.published_objects.all().filter(author_id=user_id)
+        return posts.annotate(
             comment_count=Count('comment')
-        ).order_by(
-            '-pub_date'
-        )
+        ).order_by('-pub_date')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -145,7 +135,6 @@ class ProfileDetailListView(ListView):
 class CategoryListView(ListView):
     """View для отображения страницы с постами из определенной категории."""
 
-    model = Category
     template_name = 'blog/category.html'
     paginate_by = PAGINATE_BY
 

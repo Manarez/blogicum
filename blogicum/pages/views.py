@@ -31,17 +31,17 @@ class UserCreateView(CreateView):
 
 
 def page_not_found(request, exception):
-    """Функция для переопрееделения шаблона страницы 404"""
+    """Функция для переопрееделения шаблона страницы 404."""
     return render(request, 'pages/404.html', status=HTTPStatus.NOT_FOUND)
 
 
 def csrf_failure(request, reason=''):
-    """Функция для переопрееделения шаблона страницы 403"""
+    """Функция для переопрееделения шаблона страницы 403."""
     return render(request, 'pages/403csrf.html', status=HTTPStatus.FORBIDDEN)
 
 
 def server_error(request):
-    """Функция для переопрееделения шаблона страницы 500"""
+    """Функция для переопрееделения шаблона страницы 500."""
     return render(
         request, 'pages/500.html', status=HTTPStatus.INTERNAL_SERVER_ERROR
     )

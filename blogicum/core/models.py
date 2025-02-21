@@ -20,7 +20,7 @@ class BaseModel(models.Model):
 
 
 class FullBaseModel(BaseModel):
-    """Класс для описания абстрактной модели."""
+    """Класс для описания расширенной абстрактной модели."""
 
     title = models.CharField(max_length=CHAR_LENGTH, verbose_name='Заголовок')
 

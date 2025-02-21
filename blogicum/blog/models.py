@@ -49,6 +49,7 @@ class Post(FullBaseModel):
         upload_to='post_images',
         blank=True
     )
+
     objects = models.Manager()
     published_objects = PublishedPostManager()
 
@@ -113,3 +114,6 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ('created_at',)
+
+    def __str__(self):
+        return self.text

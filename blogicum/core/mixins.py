@@ -8,13 +8,15 @@ from blog.forms import CommentForm
 
 
 class OnlyAuthorMixin(UserPassesTestMixin):
+    """Миксин для проверки на авторство."""
 
     def test_func(self):
-        object = self.get_object()
-        return object.author == self.request.user
+        obj = self.get_object()
+        return obj.author == self.request.user
 
 
 class CategoryPublishedMixin:
+    """Миксин для проверки, что категория доступна для публикации."""
 
     def dispatch(self, request, *args, **kwargs):
         category_slug = self.kwargs.get('category_slug')
@@ -27,15 +29,20 @@ class CategoryPublishedMixin:
 
 
 class ModelPostMixin:
+    """Миксин модели Post."""
+
     model = Post
 
 
 class ModelAndFormCommentMixin:
+    """Миксин модели и формы Comment."""
+
     model = Comment
     form_class = CommentForm
 
 
 class GetSuccessUrlPostMixin:
+    """Миксин получения страницы поста для перенаправления."""
 
     def get_success_url(self):
         post = self.get_object()
@@ -43,6 +50,7 @@ class GetSuccessUrlPostMixin:
 
 
 class GetSuccessUrlProfileMixin:
+    """Миксин получения страницы пользователя после перенаправления."""
 
     def get_success_url(self):
         username = self.request.user.username
